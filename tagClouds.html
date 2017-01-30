@@ -1,7 +1,149 @@
 <!DOCTYPE html>
 <html>
-<head>
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <head>
+        <title>Tag Clouds</title>
+        <meta charset="UTF-8">
+        <script type="text/javascript" src="bower_components/d3/d3.js"></script>
+        <script type="text/javascript" src="bower_components/d3-cloud/d3.layout.cloud.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    </head>
+    <body>
+    
+        <form>
+            <div id = "types">
+                <h3> Select the year or period to load the tag clouds:</h3>
+                <input type="radio" name="type" value="year" onChange= "handleSelect()"> Year 
+                <input type="radio" name="type" value="period" onChange= "handleSelect()"> Period
+            </div>
+        
+            <br>
+        
+            <div id = "justOneyear" style = "display:none;">
+                <h4> Select a year: </h4>
+                Year:
+                <select id= "Year">
+                    <option value="1986">1986</option>
+                    <option value="1987">1987</option>
+                    <option value="1988">1988</option>
+                    <option value="1989">1989</option>
+                    <option value="1990">1990</option>
+                    <option value="1991">1991</option>
+                    <option value="1992">1992</option>
+                    <option value="1993">1993</option>
+                    <option value="1994">1994</option>
+                    <option value="1995">1995</option>
+                    <option value="1996">1996</option>
+                    <option value="1997">1997</option>
+                    <option value="1998">1998</option>
+                    <option value="1999">1999</option>
+                    <option value="2000">2000</option>
+                    <option value="2001">2001</option>
+                    <option value="2002">2002</option>
+                    <option value="2003">2003</option>
+                    <option value="2004">2004</option>
+                    <option value="2005">2005</option>
+                    <option value="2006">2006</option>
+                    <option value="2007">2007</option>
+                    <option value="2008">2008</option>
+                    <option value="2009">2009</option>
+                    <option value="2010">2010</option>
+                    <option value="2011">2011</option>
+                    <option value="2012">2012</option>
+                    <option value="2013">2013</option>
+                    <option value="2014">2014</option>
+                    <option value="2015">2015</option>
+                    <option value="2016">2016</option>
+                </select>
+            </div>
+            <div id = "aPeriod" style = "display:none;">
+                <h4> Select a period: </h4>
+                From:
+                <select id= "start">
+                    <option value="1986">1986</option>
+                    <option value="1987">1987</option>
+                    <option value="1988">1988</option>
+                    <option value="1989">1989</option>
+                    <option value="1990">1990</option>
+                    <option value="1991">1991</option>
+                    <option value="1992">1992</option>
+                    <option value="1993">1993</option>
+                    <option value="1994">1994</option>
+                    <option value="1995">1995</option>
+                    <option value="1996">1996</option>
+                    <option value="1997">1997</option>
+                    <option value="1998">1998</option>
+                    <option value="1999">1999</option>
+                    <option value="2000">2000</option>
+                    <option value="2001">2001</option>
+                    <option value="2002">2002</option>
+                    <option value="2003">2003</option>
+                    <option value="2004">2004</option>
+                    <option value="2005">2005</option>
+                    <option value="2006">2006</option>
+                    <option value="2007">2007</option>
+                    <option value="2008">2008</option>
+                    <option value="2009">2009</option>
+                    <option value="2010">2010</option>
+                    <option value="2011">2011</option>
+                    <option value="2012">2012</option>
+                    <option value="2013">2013</option>
+                    <option value="2014">2014</option>
+                    <option value="2015">2015</option>
+                    <option value="2016">2016</option>
+                </select>
+                To:
+                <select id= "end">
+                    <option value="1986">1986</option>
+                    <option value="1987">1987</option>
+                    <option value="1988">1988</option>
+                    <option value="1989">1989</option>
+                    <option value="1990">1990</option>
+                    <option value="1991">1991</option>
+                    <option value="1992">1992</option>
+                    <option value="1993">1993</option>
+                    <option value="1994">1994</option>
+                    <option value="1995">1995</option>
+                    <option value="1996">1996</option>
+                    <option value="1997">1997</option>
+                    <option value="1998">1998</option>
+                    <option value="1999">1999</option>
+                    <option value="2000">2000</option>
+                    <option value="2001">2001</option>
+                    <option value="2002">2002</option>
+                    <option value="2003">2003</option>
+                    <option value="2004">2004</option>
+                    <option value="2005">2005</option>
+                    <option value="2006">2006</option>
+                    <option value="2007">2007</option>
+                    <option value="2008">2008</option>
+                    <option value="2009">2009</option>
+                    <option value="2010">2010</option>
+                    <option value="2011">2011</option>
+                    <option value="2012">2012</option>
+                    <option value="2013">2013</option>
+                    <option value="2014">2014</option>
+                    <option value="2015">2015</option>
+                    <option value="2016">2016</option>
+                </select>
+            </div>   
+            <br><br>
+            
+            <button id = "btnLoadDAta" type = "button" style = "display:none;" onClick="loadData()"> 
+                Load data 
+            </button>
+        </form>
+        
+        <div id="vis"></div>
+    
+    </body>
+</html>
+
+<style>
+    #types {
+        display: inline-block;
+    }
+</style>
+
 <script>
 
     /*$(document).ready(function() {
@@ -30,8 +172,12 @@
                 $('#justOneyear').hide();
                 $('#aPeriod').show();
             }
+        
+        $('#btnLoadDAta').show();
+
     }
 
+    var tags;
     function loadData()
     {
         var dataFiltered;
@@ -44,7 +190,7 @@
             if (valueRadioButton == "year")
             {
                 var year = $('#Year').val();
-                dataFiltered = filterData(data, year, 0); // 0 given to identify that is just a year.
+                dataFiltered = filterData(data, year, 0); // 0 given to identify that is just 1 year.
             }
             else
                 if (valueRadioButton == "period")
@@ -54,8 +200,17 @@
                     dataFiltered = filterData(data, from, to);
                 }
             console.log(dataFiltered);
+            
             allTags = handleTags(dataFiltered);
             console.log(allTags);
+            
+            result = countTags(allTags);
+            console.log(result);
+            tags = result;
+
+            $( "#vis" ).empty();
+            $.getScript("word-cloud.js");
+
         })
             .fail(function(textStatus, errorThrown) {
             console.log("error " + textStatus, errorThrown);
@@ -91,13 +246,45 @@
         for (i = 0; i < data.length; i++)
         {
              aSetofTags = replaceAll(data[i]["tags"], ",", "");
+             aSetofTags = aSetofTags.trim();
              aSetofTags = aSetofTags.replace(/\s+/g,' ');
              aSetofTags = aSetofTags.replace(new RegExp('.$'), '');
              //aSetofTags = aSetofTags.split(" ");
-             allTags += aSetofTags;
+             allTags += " " + aSetofTags;
+             allTags = allTags.trim();
         }
     
         return allTags;
+    }
+
+    function countTags(allTags)
+    {
+        var splittedTags = allTags.split(" ");
+        var temp = new Array();
+        var result = new Array();
+        var i = 0;
+        var aTag;
+
+        for (i = 0; i < splittedTags.length; i++)
+        {
+            var index = splittedTags[i];
+            if (temp[index] == undefined)
+                temp[index] = 1;
+            else
+                temp[index] += 1;
+        }
+        
+        var keys = Object.keys(temp);
+
+        for (i = 0; i < keys.length; i++)
+        {
+            var index = keys[i];
+            aTag = {"key": index, "value": temp[index]};
+            result.push(aTag);
+        }
+
+        return result;
+
     }
 
     function replaceAll(str, find, replace) {
@@ -106,136 +293,3 @@
 
 //anos 1986 até 2016
 </script>
-
-
-</head>
-<body>
-    <form>
-        <div id = "types">
-            <h3> Select the year or period to load the tag clouds:</h3>
-            <input type="radio" name="type" value="year" onChange= "handleSelect()"> Year 
-            <input type="radio" name="type" value="period" onChange= "handleSelect()"> Period
-        </div>
-        
-        <br>
-        
-        <div id = "justOneyear" style = "display:none;">
-            <h4> Select a year: </h4>
-            Year:
-            <select id= "Year">
-                <option value="1986">1986</option>
-                <option value="1987">1987</option>
-                <option value="1988">1988</option>
-                <option value="1989">1989</option>
-                <option value="1990">1990</option>
-                <option value="1991">1991</option>
-                <option value="1992">1992</option>
-                <option value="1993">1993</option>
-                <option value="1994">1994</option>
-                <option value="1995">1995</option>
-                <option value="1996">1996</option>
-                <option value="1997">1997</option>
-                <option value="1998">1998</option>
-                <option value="1999">1999</option>
-                <option value="2000">2000</option>
-                <option value="2001">2001</option>
-                <option value="2002">2002</option>
-                <option value="2003">2003</option>
-                <option value="2004">2004</option>
-                <option value="2005">2005</option>
-                <option value="2006">2006</option>
-                <option value="2007">2007</option>
-                <option value="2008">2008</option>
-                <option value="2009">2009</option>
-                <option value="2010">2010</option>
-                <option value="2011">2011</option>
-                <option value="2012">2012</option>
-                <option value="2013">2013</option>
-                <option value="2014">2014</option>
-                <option value="2015">2015</option>
-                <option value="2016">2016</option>
-            </select>
-        </div>
-        <div id = "aPeriod" style = "display:none;">
-            <h4> Select a period: </h4>
-            From:
-            <select id= "start">
-                <option value="1986">1986</option>
-                <option value="1987">1987</option>
-                <option value="1988">1988</option>
-                <option value="1989">1989</option>
-                <option value="1990">1990</option>
-                <option value="1991">1991</option>
-                <option value="1992">1992</option>
-                <option value="1993">1993</option>
-                <option value="1994">1994</option>
-                <option value="1995">1995</option>
-                <option value="1996">1996</option>
-                <option value="1997">1997</option>
-                <option value="1998">1998</option>
-                <option value="1999">1999</option>
-                <option value="2000">2000</option>
-                <option value="2001">2001</option>
-                <option value="2002">2002</option>
-                <option value="2003">2003</option>
-                <option value="2004">2004</option>
-                <option value="2005">2005</option>
-                <option value="2006">2006</option>
-                <option value="2007">2007</option>
-                <option value="2008">2008</option>
-                <option value="2009">2009</option>
-                <option value="2010">2010</option>
-                <option value="2011">2011</option>
-                <option value="2012">2012</option>
-                <option value="2013">2013</option>
-                <option value="2014">2014</option>
-                <option value="2015">2015</option>
-                <option value="2016">2016</option>
-            </select>
-            To:
-            <select id= "end">
-                <option value="1986">1986</option>
-                <option value="1987">1987</option>
-                <option value="1988">1988</option>
-                <option value="1989">1989</option>
-                <option value="1990">1990</option>
-                <option value="1991">1991</option>
-                <option value="1992">1992</option>
-                <option value="1993">1993</option>
-                <option value="1994">1994</option>
-                <option value="1995">1995</option>
-                <option value="1996">1996</option>
-                <option value="1997">1997</option>
-                <option value="1998">1998</option>
-                <option value="1999">1999</option>
-                <option value="2000">2000</option>
-                <option value="2001">2001</option>
-                <option value="2002">2002</option>
-                <option value="2003">2003</option>
-                <option value="2004">2004</option>
-                <option value="2005">2005</option>
-                <option value="2006">2006</option>
-                <option value="2007">2007</option>
-                <option value="2008">2008</option>
-                <option value="2009">2009</option>
-                <option value="2010">2010</option>
-                <option value="2011">2011</option>
-                <option value="2012">2012</option>
-                <option value="2013">2013</option>
-                <option value="2014">2014</option>
-                <option value="2015">2015</option>
-                <option value="2016">2016</option>
-            </select>
-        </div>   
-        <br><br>
-        <button type = "button" onClick="loadData()"> Load data </button>       
-    </form>
-    
-</body>
-</html>
-
-<style>
-    #types {
-        display: inline-block;
-    }
-</style>
