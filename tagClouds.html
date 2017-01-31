@@ -128,6 +128,13 @@
             </div>   
             <br><br>
             
+            <div id = "inputMaxTags" style = "display:none;">
+                Maximum number of tags:
+                <input type="text" id = "maxTags" onkeypress='return event.charCode >= 48 && event.charCode <= 57'>
+                </input>
+            </div>            
+            
+            <br> <br>
             <button id = "btnLoadDAta" type = "button" style = "display:none;" onClick="loadData()"> 
                 Load data 
             </button>
@@ -173,6 +180,7 @@
                 $('#aPeriod').show();
             }
         
+        $('#inputMaxTags').show();
         $('#btnLoadDAta').show();
 
     }
@@ -264,6 +272,7 @@
         var result = new Array();
         var i = 0;
         var aTag;
+        var maxTags = $('#maxTags').val();
 
         for (i = 0; i < splittedTags.length; i++)
         {
@@ -271,7 +280,8 @@
             if (temp[index] == undefined)
                 temp[index] = 1;
             else
-                temp[index] += 1;
+                if (index != "de" && index != "da")
+                    temp[index] += 1;
         }
         
         var keys = Object.keys(temp);
@@ -283,12 +293,27 @@
             result.push(aTag);
         }
 
+        result = result.sort(compare); //Decrescent order by frequency
+        
+        if (maxTags.length > 0)
+            result = result.slice(0, maxTags);
+
         return result;
 
     }
 
     function replaceAll(str, find, replace) {
         return str.replace(new RegExp(find, 'g'), replace);
+    }
+
+    function compare (a,b)
+    {
+        if (a.value > b.value)
+            return -1;
+        if (a.value < b.value)
+            return 1;
+
+        return 0;
     }
 
 //anos 1986 até 2016
