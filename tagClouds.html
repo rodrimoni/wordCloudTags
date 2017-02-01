@@ -145,12 +145,6 @@
     </body>
 </html>
 
-<style>
-    #types {
-        display: inline-block;
-    }
-</style>
-
 <script>
 
     /*$(document).ready(function() {
@@ -164,6 +158,7 @@
           })
 
     });*/
+
 
     function handleSelect()
     {
@@ -217,13 +212,19 @@
             tags = result;
 
             $( "#vis" ).empty();
-            $.getScript("word-cloud.js");
+
+            $.getScript("word-cloud.js")
+            .done(function() {
+                linkAllWords();
+            })
+            .fail(function(textStatus, errorThrown) {
+                console.log("error " + textStatus, errorThrown);
+            });
 
         })
             .fail(function(textStatus, errorThrown) {
             console.log("error " + textStatus, errorThrown);
         })
-        
     }
 
     function filterData(data, start, end)
@@ -249,16 +250,18 @@
     function handleTags(data)
     {
         var i;
-        var allTags = new Array();
+        var allTags = "";
         var aSetOfTags;
         for (i = 0; i < data.length; i++)
         {
-             aSetofTags = replaceAll(data[i]["tags"], ",", "");
-             aSetofTags = aSetofTags.trim();
+             //aSetofTags = replaceAll(data[i]["tags"], ",", "");
+             aSetofTags = data[i]["tags"];
+             //aSetofTags = aSetofTags.trim();
              aSetofTags = aSetofTags.replace(/\s+/g,' ');
              aSetofTags = aSetofTags.replace(new RegExp('.$'), '');
-             //aSetofTags = aSetofTags.split(" ");
-             allTags += " " + aSetofTags;
+             allTags += aSetofTags;
+             if (i < data.length - 1)
+                allTags += ",";
              allTags = allTags.trim();
         }
     
@@ -267,21 +270,27 @@
 
     function countTags(allTags)
     {
-        var splittedTags = allTags.split(" ");
+        var splittedTags = allTags.split(",");
         var temp = new Array();
         var result = new Array();
         var i = 0;
         var aTag;
+        var excludedTags = ["de", "da", "uso", "ex", "um", "do", "sem", "ao", "s.a.", "a", "às", "e"];
+
         var maxTags = $('#maxTags').val();
 
         for (i = 0; i < splittedTags.length; i++)
         {
             var index = splittedTags[i];
-            if (temp[index] == undefined)
-                temp[index] = 1;
-            else
-                if (index != "de" && index != "da")
+            var found = $.inArray(index, excludedTags) > -1;
+
+            if (!found)
+            {
+                if (temp[index] == undefined)
+                    temp[index] = 1;
+                else
                     temp[index] += 1;
+            }
         }
         
         var keys = Object.keys(temp);
@@ -302,6 +311,15 @@
 
     }
 
+    function linkAllWords()
+    {
+        var searchEles = document.getElementById("cloudTags").children;
+
+        for (var i =0; i < searchEles.length; i++){
+            searchEles[i].onclick = function(){alert(this.textContent);};
+        }
+    }
+
     function replaceAll(str, find, replace) {
         return str.replace(new RegExp(find, 'g'), replace);
     }
@@ -318,3 +336,15 @@
 
 //anos 1986 até 2016
 </script>
+
+<style>
+    #types {
+        display: inline-block;
+    }
+
+    #cloudTags text
+    {
+        cursor: pointer;
+    }
+
+</style>
