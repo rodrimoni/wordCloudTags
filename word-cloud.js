@@ -1,6 +1,6 @@
 var fill = d3.scale.category20b();
 
-var w = window.innerWidth,
+var w = window.innerWidth/2,
         h = window.innerHeight;
 
 var max,
@@ -17,7 +17,7 @@ var layout = d3.layout.cloud()
         })
         .on("end", draw);
 
-var svg = d3.select("#vis").append("svg")
+var svg = d3.select("#tag-cloud").append("svg")
         .attr("width", w)
         .attr("height", h);
 
@@ -25,12 +25,10 @@ var vis = svg.append("g").attr("transform", "translate(" + [w >> 1, h >> 1] + ")
 
 update();
 
-window.onresize = function(event) {
-    update();
-};
+
 
 function draw(data, bounds) {
-    var w = window.innerWidth,
+    var w = window.innerWidth/2,
         h = window.innerHeight;
 
     svg.attr("width", w).attr("height", h);
@@ -54,6 +52,9 @@ function draw(data, bounds) {
                 return d.size + "px";
             });
     text.enter().append("text")
+            .attr("id", function(d){
+                return d.text;
+            })
             .attr("text-anchor", "middle")
             .attr("transform", function(d) {
                 return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
@@ -80,7 +81,7 @@ function draw(data, bounds) {
 
 function update() {
     layout.font('impact').spiral('archimedean');
-    fontSize = d3.scale['sqrt']().range([10, 100]);
+    fontSize = d3.scale['sqrt']().range([10, 70]);
     if (tags.length){
         fontSize.domain([+tags[tags.length - 1].value || 1, +tags[0].value]);
     }

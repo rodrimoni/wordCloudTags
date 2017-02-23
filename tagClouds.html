@@ -6,6 +6,16 @@
         <script type="text/javascript" src="bower_components/d3/d3.js"></script>
         <script type="text/javascript" src="bower_components/d3-cloud/d3.layout.cloud.js"></script>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+
+        <!-- Latest compiled and minified CSS -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+        <!-- Optional theme -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+
+        <!-- Latest compiled and minified JavaScript -->
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
     </head>
     <body>
     
@@ -126,22 +136,27 @@
                     <option value="2016">2016</option>
                 </select>
             </div>   
-            <br><br>
+            <br>
             
             <div id = "inputMaxTags" style = "display:none;">
                 Maximum number of tags:
                 <input type="text" id = "maxTags" onkeypress='return event.charCode >= 48 && event.charCode <= 57'>
                 </input>
-            </div>            
-            
-            <br> <br>
-            <button id = "btnLoadDAta" type = "button" style = "display:none;" onClick="loadData()"> 
+                <button id = "btnLoadDAta" type = "button" style = "display:none;" onClick="loadData()"> 
                 Load data 
             </button>
+            </div>            
         </form>
         
-        <div id="vis"></div>
-    
+        <div class="row">
+            <div class="col-sm-6">
+                <div id ="horizontal-bar-chart"></div>
+            </div>
+            <div class="col-sm-6">
+                <div id="tag-cloud"></div>
+            </div>
+        </div>
+
     </body>
 </html>
 
@@ -181,11 +196,18 @@
     }
 
     var tags;
+    var map={"â":"a","Â":"A","à":"a","À":"A","á":"a","Á":"A","ã":"a","Ã":"A","ê":"e","Ê":"E","è":"e","È":"E","é":"e","É":"E","î":"i","Î":"I","ì":"i","Ì":"I","í":"i","Í":"I","õ":"o","Õ":"O","ô":"o","Ô":"O","ò":"o","Ò":"O","ó":"o","Ó":"O","ü":"u","Ü":"U","û":"u","Û":"U","ú":"u","Ú":"U","ù":"u","Ù":"U","ç":"c","Ç":"C"};
+    
+
     function loadData()
     {
         var dataFiltered;
         var valueRadioButton = $('input[name=type]:checked').val();
         var allTags;
+
+        $('html, body').animate({
+            scrollTop: $("#tag-cloud").offset().top
+        }, 1000);
 
         var jqxhr = $.getJSON( "outputTags.json", function(data) {
             //console.log( "success", data );
@@ -202,20 +224,22 @@
                     var to = $('#end').val();
                     dataFiltered = filterData(data, from, to);
                 }
-            console.log(dataFiltered);
+            //console.log(dataFiltered);
             
             allTags = handleTags(dataFiltered);
-            console.log(allTags);
+            //console.log(allTags);
             
             result = countTags(allTags);
-            console.log(result);
+            //console.log(result);
             tags = result;
 
-            $( "#vis" ).empty();
+            $( "#tag-cloud" ).empty();
+            $( "#horizontal-bar-chart" ).empty();
 
             $.getScript("word-cloud.js")
             .done(function() {
                 linkAllWords();
+                drawHorizontalBarChart();
             })
             .fail(function(textStatus, errorThrown) {
                 console.log("error " + textStatus, errorThrown);
@@ -258,7 +282,7 @@
              aSetofTags = data[i]["tags"];
              //aSetofTags = aSetofTags.trim();
              aSetofTags = aSetofTags.replace(/\s+/g,' ');
-             aSetofTags = aSetofTags.replace(new RegExp('.$'), '');
+             aSetofTags = aSetofTags.trim().replace(new RegExp('.$'), '');
              allTags += aSetofTags;
              if (i < data.length - 1)
                 allTags += ",";
@@ -270,18 +294,20 @@
 
     function countTags(allTags)
     {
+        const tag_limit = 1000;
+
         var splittedTags = allTags.split(",");
         var temp = new Array();
         var result = new Array();
         var i = 0;
         var aTag;
-        var excludedTags = ["de", "da", "uso", "ex", "um", "do", "sem", "ao", "s.a.", "a", "às", "e"];
+        var excludedTags = ["de", "da", "uso", "ex", "um", "do", "sem", "ao", "s.a.", "a", "às", "e", ""];
 
         var maxTags = $('#maxTags').val();
 
         for (i = 0; i < splittedTags.length; i++)
         {
-            var index = splittedTags[i];
+            var index = splittedTags[i].trim();
             var found = $.inArray(index, excludedTags) > -1;
 
             if (!found)
@@ -292,8 +318,10 @@
                     temp[index] += 1;
             }
         }
-        
+
         var keys = Object.keys(temp);
+
+        concatEqualIndexes(keys, temp);
 
         for (i = 0; i < keys.length; i++)
         {
@@ -303,12 +331,50 @@
         }
 
         result = result.sort(compare); //Decrescent order by frequency
-        
-        if (maxTags.length > 0)
-            result = result.slice(0, maxTags);
 
+        //var filtered = result.filter(function(element){
+          //                          return element.value >= result[0].value/2;
+            //                    });
+
+        if (maxTags > 0 && maxTags < tag_limit)
+            result = result.slice(0, maxTags);
+        else
+            if (result.length > tag_limit)
+            {
+                result = result.slice(0, tag_limit);
+            }
+
+        console.log(temp);
         return result;
 
+    }
+
+    function concatEqualIndexes(key, temp)
+    {
+        var found = 0;
+        for (var i = 0; i < key.length; i++)
+        {
+            if (containsIllegalchar(key[i]))
+            {
+                tempKey = key[i];
+                var withoutSpecialChar = removeSpecialChar(tempKey);
+                if (temp[withoutSpecialChar] != undefined)
+                {
+                    temp[key[i]] += temp[withoutSpecialChar];
+                    delete(temp[withoutSpecialChar]);
+                    key.splice(temp.indexOf(withoutSpecialChar), 1);
+                }
+            }
+        }
+    }
+
+    function containsIllegalchar(str)
+    {
+        if(/^[a-zA-Z0-9- ]*$/.test(str) == false) {
+            return true;
+        }
+        else
+            return false;
     }
 
     function linkAllWords()
@@ -316,7 +382,8 @@
         var searchEles = document.getElementById("cloudTags").children;
 
         for (var i =0; i < searchEles.length; i++){
-            searchEles[i].onclick = function(){alert(this.textContent);};
+            searchEles[i].onmouseover = function(){highlightBar(this.textContent);};
+            searchEles[i].onmouseout = function() {recoverColors();};
         }
     }
 
@@ -334,6 +401,151 @@
         return 0;
     }
 
+    function getColors(data)
+    {
+        var colors = new Array();
+
+        for (var i = 0; i < data.length; i++)
+        {
+            color = data[i]['key'];
+            colors.push($("[id='"+ color + "']")[0].style['fill']); //Link the color of the word with the color bar
+        }
+        //console.log(colors);
+        return colors;
+    }
+
+    function drawHorizontalBarChart()
+    {
+        var data = tags.slice(0,20);
+
+        var colors = getColors(data);
+
+        var div = d3.select("body").append("div").attr("class", "toolTip");
+
+        var axisMargin = 20,
+                margin = 40,
+                valueMargin = 4,
+                width = window.innerWidth/2,
+                height = window.innerHeight,
+                barHeight = (height-axisMargin-margin*2)* 0.4/data.length,
+                barPadding = (height-axisMargin-margin*2)*0.6/data.length,
+                data, bar, svg, scale, xAxis, labelWidth = 0;
+
+        max = d3.max(data, function(d) { return d.value; });
+
+        svg = d3.select('#horizontal-bar-chart')
+                .append("svg")
+                .attr("width", width)
+                .attr("height", height);
+
+
+        bar = svg.selectAll("g")
+                .data(data)
+                .enter()
+                .append("g");
+
+        bar.attr("class", "bar")
+                .attr("cx",0)
+                .attr("transform", function(d, i) {
+                    return "translate(" + margin + "," + (i * (barHeight + barPadding) + barPadding) + ")";
+                });
+
+        bar.append("text")
+                .attr("class", "label")
+                .attr("y", barHeight/2)
+                .attr("dy", ".35em") //vertical align middle
+                .text(function(d){
+                    return d.key;
+                }).each(function() {
+            labelWidth = Math.ceil(Math.max(labelWidth, this.getBBox().width));
+        });
+
+        scale = d3.scale.linear()
+                .domain([0, max])
+                .range([0, width - margin*2 - labelWidth]);
+
+        xAxis = d3.svg.axis()
+                .scale(scale)
+                .tickSize(-height + 2*margin + axisMargin)
+                .orient("bottom");
+
+        bar.append("rect")
+                .attr("transform", "translate("+labelWidth+", 0)")
+                .attr("height", barHeight)
+                .attr("width", function(d){
+                    return scale(d.value);
+                })
+                        .style('fill',function(d,i){ return colors[i]; });
+
+        bar.append("text")
+                .attr("class", "value")
+                .attr("y", barHeight / 2)
+                .attr("dx", -valueMargin + labelWidth) //margin right
+                .attr("dy", ".35em") //vertical align middle
+                .attr("text-anchor", "end")
+                .text(function(d){
+                    return (d.value);
+                })
+                .attr("x", function(d){
+                    var width = this.getBBox().width;
+                    return Math.max(width + valueMargin, scale(d.value));
+                });
+
+        bar
+                .on("mousemove", function(d){
+                    div.style("left", d3.event.pageX+10+"px");
+                    div.style("top", d3.event.pageY-25+"px");
+                    div.style("display", "inline-block");
+                    div.html((d.key)+"<br>"+("frequency: " + d.value));
+                });
+        bar
+                .on("mouseout", function(d){
+                    div.style("display", "none");
+                });
+
+        svg.insert("g",":first-child")
+                .attr("class", "axisHorizontal")
+                .attr("transform", "translate(" + (margin + labelWidth) + ","+ (height - axisMargin - margin)+")")
+                .call(xAxis);
+        }
+
+        function highlightBar(tagName)
+        {
+            var foundTag = false;
+
+            $("#horizontal-bar-chart svg .bar")
+                .each(function(index, element){
+                    if (element.children[0].textContent == tagName)
+                        foundTag = true;
+                });
+
+            if (foundTag)
+            {
+                $("#horizontal-bar-chart svg .bar")
+                    .each(function(index, element){
+                        if (element.children[0].textContent != tagName)
+                            element.children[1].style['fill'] = "#d9d9d9";
+                    });
+            }
+        }
+
+        function recoverColors()
+        {
+            var data = tags.slice(0,20);
+            var colors = getColors(data);
+
+            $("#horizontal-bar-chart svg .bar")
+                .each(function(index, element){
+                        element.children[1].style['fill'] = colors[index];
+                });
+        }
+
+        function removeSpecialChar(s)
+        { 
+            return s.replace(/[\W\[\] ]/g,function(a){
+                return map[a]||a}); 
+        }
+
 //anos 1986 até 2016
 </script>
 
@@ -347,4 +559,65 @@
         cursor: pointer;
     }
 
+    #horizontal-bar-chart body {
+        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+        width: 960px;
+        height: 500px;
+        position: relative;
+    }
+
+    #horizontal-bar-chart svg {
+        width: 100%;
+        height: 100%;
+        position: center;
+    }
+
+    .toolTip {
+        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+        position: absolute;
+        display: none;
+        width: auto;
+        height: auto;
+        background: none repeat scroll 0 0 white;
+        border: 0 none;
+        border-radius: 8px 8px 8px 8px;
+        box-shadow: -3px 3px 15px #888888;
+        color: black;
+        font: 15px sans-serif;
+        padding: 5px;
+        text-align: center;
+    }
+
+    #horizontal-bar-chart text {
+        font: 10px sans-serif;
+        color: white;
+    }
+    #horizontal-bar-chart text.value {
+        font-size: 120%;
+        fill: white;
+    }
+
+    #horizontal-bar-chart .axisHorizontal path{
+        fill: none;
+    }
+
+    #horizontal-bar-chart .axisHorizontal .tick line {
+        stroke-width: 1;
+        stroke: rgba(0, 0, 0, 0.2);
+    }
+
+    #horizontal-bar-chart .bar {
+        fill-opacity: .9;
+    }
+
+    #horizontal-bar-chart .label
+    {
+      font-size:100%;
+    }
+    #horizontal-bar-chart .tick text 
+    {
+      font-size:90%;  
+    }
+
 </style>
+
